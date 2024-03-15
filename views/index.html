@@ -1,0 +1,75 @@
+{{ block "index" . }}
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Index</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/index.css" />
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous">
+
+    </script>
+</head>
+
+<body>
+  {{template "form" .Form}}
+  <hr />
+  {{template "display" .Data}}
+
+  <script>document.addEventListener("DOMContentLoaded", (event) => {
+      document.body.addEventListener("htmx:beforeSwap", function (evt) {
+        if (evt.detail.xhr.status === 422) {
+          evt.detail.shouldSwap = true
+          evt.detail.isError = false
+        }
+      })
+    }) 
+  </script>
+
+</body>
+
+</html>
+{{ end }}
+
+{{block "form" .}}
+<form hx-swap="outerHTML" hx-post="/contacts">
+  name: <input {{ if .Values.name}} value="{{.Values.name}}" {{end}} type="text" name="name" id="name">
+
+  email: <input {{ if .Values.email}} value="{{.Values.email}}" {{end}} type="text" name="email" id="email">
+
+  {{if .Errors.email}}
+  <div style="color: red;">{{.Errors.email}}</div>
+  {{end}}
+
+  <button type="submit">Add</button>
+</form>
+{{end}}
+
+{{block "display" .}}
+<div style="display: flex; flex-direction: column;" id="contacts">
+  {{range .Contacts}}
+  {{template "contact" .}}
+  {{end}}
+</div>
+{{end}}
+
+
+{{block "contact" .}}
+<div class="contact" style="display: flex; gap: 20px; opacity: 1;" id="contact-{{.Id}}">
+  <button hx-indicator="#c-indicator-{{.Id}}" hx-swap="outerHTML swap:500ms" hx-target="#contact-{{.Id}}"
+    style="cursor: pointer;" hx-delete="/contacts/{{ .Id }}">delete</button>
+  Name: <span>{{.Name}}</span>
+  Email: <span>{{.Email}}</span>
+  <div class="htmx-indicator" id="c-indicator-{{.Id}}">
+    <img src="/images/bars.svg" alt="loading" style="width: 1rem" />
+  </div>
+</div>
+{{end}}
+
+{{block "oob-contact" .}}
+<div hx-swap-oob="afterbegin" id="contacts">
+  {{template "contact" .}}
+</div>
+{{end}}
